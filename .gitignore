@@ -1,0 +1,8 @@
+# Runtime logs (wayvnc writes ~/.local/state/wayvnc-dell.log)
+*.log
+
+# Local environment / secrets
+.env
+
+# Local databases / state
+*.db

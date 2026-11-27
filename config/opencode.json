@@ -1,0 +1,69 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agents": {
+    "plan": {
+      "description": "Read-only analysis and step-by-step implementation planning",
+      "mode": "primary",
+      "system": "You are the planning agent. Before any code is changed, analyze the requirements, identify the relevant data structures and interfaces, enumerate edge cases and failure modes, and present a clear step-by-step implementation plan for the user to approve. Work read-only: inspect and reason only; do not edit or create project files. When the plan is approved, hand implementation off to the build agent.",
+      "permissions": [
+        { "action": "shell", "resource": "*", "effect": "ask" },
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "write", "resource": "*", "effect": "deny" },
+        { "action": "shell", "resource": "git status *", "effect": "allow" },
+        { "action": "shell", "resource": "git diff *", "effect": "allow" },
+        { "action": "shell", "resource": "git log *", "effect": "allow" },
+        { "action": "shell", "resource": "ls *", "effect": "allow" },
+        { "action": "shell", "resource": "cat *", "effect": "allow" },
+        { "action": "shell", "resource": "rg *", "effect": "allow" },
+        { "action": "shell", "resource": "find *", "effect": "allow" }
+      ]
+    },
+    "build": {
+      "description": "Primary coding agent with local dev commands allowed",
+      "mode": "primary",
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "allow" },
+        { "action": "write", "resource": "*", "effect": "allow" },
+        { "action": "shell", "resource": "*", "effect": "ask" },
+        { "action": "shell", "resource": "git status *", "effect": "allow" },
+        { "action": "shell", "resource": "git diff *", "effect": "allow" },
+        { "action": "shell", "resource": "git log *", "effect": "allow" },
+        { "action": "shell", "resource": "git add *", "effect": "allow" },
+        { "action": "shell", "resource": "git commit *", "effect": "allow" },
+        { "action": "shell", "resource": "ls *", "effect": "allow" },
+        { "action": "shell", "resource": "cat *", "effect": "allow" },
+        { "action": "shell", "resource": "rg *", "effect": "allow" },
+        { "action": "shell", "resource": "find *", "effect": "allow" },
+        { "action": "shell", "resource": "pwd", "effect": "allow" },
+        { "action": "shell", "resource": "mkdir *", "effect": "allow" },
+        { "action": "shell", "resource": "touch *", "effect": "allow" },
+        { "action": "shell", "resource": "npm install", "effect": "allow" },
+        { "action": "shell", "resource": "npm test", "effect": "allow" },
+        { "action": "shell", "resource": "npm run *", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm install", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm test", "effect": "allow" },
+        { "action": "shell", "resource": "pnpm run *", "effect": "allow" },
+        { "action": "shell", "resource": "yarn install", "effect": "allow" },
+        { "action": "shell", "resource": "yarn test", "effect": "allow" },
+        { "action": "shell", "resource": "bun install", "effect": "allow" },
+        { "action": "shell", "resource": "bun test", "effect": "allow" },
+        { "action": "shell", "resource": "bun run *", "effect": "allow" },
+        { "action": "shell", "resource": "node *", "effect": "allow" },
+        { "action": "shell", "resource": "python3 *", "effect": "allow" },
+        { "action": "shell", "resource": "pytest *", "effect": "allow" },
+        { "action": "shell", "resource": "go test *", "effect": "allow" },
+        { "action": "shell", "resource": "go build *", "effect": "allow" },
+        { "action": "shell", "resource": "cargo test", "effect": "allow" },
+        { "action": "shell", "resource": "cargo build", "effect": "allow" },
+        { "action": "shell", "resource": "cargo check", "effect": "allow" },
+        { "action": "shell", "resource": "make *", "effect": "allow" },
+        { "action": "shell", "resource": "tsc *", "effect": "allow" },
+        { "action": "shell", "resource": "vitest *", "effect": "allow" },
+        { "action": "shell", "resource": "jest *", "effect": "allow" },
+        { "action": "shell", "resource": "rm -rf *", "effect": "ask" },
+        { "action": "shell", "resource": "git push --force *", "effect": "ask" },
+        { "action": "shell", "resource": "sudo *", "effect": "ask" }
+      ]
+    }
+  }
+}

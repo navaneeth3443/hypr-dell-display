@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Send the active window to the headless "Dell" workspace without following it.
+# Called only by the Super+Shift+D keybind.
+
+WS=$(hyprctl monitors | grep -A 8 "HEADLESS-2" | grep "active workspace:" | awk '{print $3}')
+
+if [ -z "$WS" ]; then
+    notify-send "Dell Monitor" "HEADLESS-2 is not active - toggle it on first"
+    exit 1
+fi
+
+# Lua-native Hyprland: dispatch takes an hl.dsp.* expression, not the old
+# "movetoworkspacesilent, N" string.
+hyprctl dispatch "hl.dsp.window.move({ workspace = \"${WS}\", silent = true })"

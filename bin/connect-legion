@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Connect this machine (the Dell) to the Legion's HEADLESS-2 VNC desktop.
+#
+# This is a clean template: no network address is baked in. The Legion's
+# address comes from the environment, falling back to the direct
+# peer-to-peer Ethernet address 10.0.0.1. When both machines are on a
+# hotspot or LAN instead, pass the Legion's address on that network:
+#
+#   LEGION_IP=192.168.43.10 bin/connect-legion
+#   VNC_PORT=5901 bin/connect-legion
+#
+# Extra arguments are forwarded to TigerVNC Viewer (e.g. -Fullscreen).
+
+set -eu
+
+LEGION_IP="${LEGION_IP:-10.0.0.1}"
+VNC_PORT="${VNC_PORT:-5900}"
+
+if ! command -v vncviewer >/dev/null 2>&1; then
+    echo "connect-legion: TigerVNC viewer (vncviewer) is not installed" >&2
+    exit 1
+fi
+
+exec vncviewer "${LEGION_IP}:${VNC_PORT}" "$@"

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Toggle the on-demand "Dell" extended display: headless output + wayvnc.
+# Nothing here runs at boot; this is called only by the Super+Shift+M keybind.
+# wayvnc stderr is logged and startup is verified before reporting success.
+
+set -u
+
+PORT=5900
+LOG="$HOME/.local/state/wayvnc-dell.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+
+# Keybinds normally inherit the compositor's Wayland env, but fall back to the
+# live socket so a launcher with a scrubbed environment still works.
+if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    for sock in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/wayland-*; do
+        [ -S "$sock" ] && { export WAYLAND_DISPLAY="${sock##*/}"; break; }
+    done
+fi
+
+port_listening() {
+    ss -H -tln "sport = :$PORT" | grep -q .
+}
+
+start_vnc() {
+    # Already healthy: leave the running instance alone.
+    if pgrep -x wayvnc >/dev/null 2>&1 && port_listening; then
+        return 0
+    fi
+
+    pkill -x wayvnc 2>/dev/null || true
+    sleep 0.3
+
+    local attempt pid i
+    for attempt in 1 2 3; do
+        : > "$LOG"
+        nohup wayvnc --max-fps=60 --output=HEADLESS-2 0.0.0.0 "$PORT" >>"$LOG" 2>&1 &
+        pid=$!
+        for i in $(seq 1 20); do
+            sleep 0.25
+            if port_listening && pgrep -x wayvnc >/dev/null 2>&1; then
+                return 0
+            fi
+            kill -0 "$pid" 2>/dev/null || break
+        done
+        pkill -x wayvnc 2>/dev/null || true
+        sleep 0.3
+    done
+    return 1
+}
+
+if hyprctl monitors | grep -q "HEADLESS-2"; then
+    # ---- Turn OFF: go back to the stock single-screen setup ----
+    # -x matches the process name exactly; -f would also kill unrelated shells
+    # whose command line merely mentions wayvnc.
+    pkill -x wayvnc 2>/dev/null || true
+    hyprctl output remove HEADLESS-2
+    for i in $(seq 1 20); do
+        port_listening || break
+        sleep 0.25
+    done
+    notify-send "Dell Monitor OFF" "Returned to single screen"
+else
+    # ---- Turn ON: spawn the virtual monitor and its VNC server ----
+    hyprctl output create headless HEADLESS-2
+    # eDP-1 is 1920x1200@165 at scale 1.25 -> 1536 logical pixels wide.
+    # This is a Lua-config Hyprland: `hyprctl keyword monitor` is rejected, so
+    # apply the rule through the hl.monitor API instead. Also pinned in
+    # ~/.config/hypr/monitors_user.lua so a reload cannot reset it to 0x0.
+    hyprctl eval 'hl.monitor({ output = "HEADLESS-2", mode = "1920x1080@60", position = "1536x0", scale = 1 })'
+
+    if start_vnc; then
+        notify-send "Dell Monitor ON" "HEADLESS-2 ready - wayvnc on 0.0.0.0:$PORT"
+    else
+        notify-send -u critical "Dell Monitor ON failed" "wayvnc did not bind 0.0.0.0:$PORT - see $LOG"
+        exit 1
+    fi
+fi
